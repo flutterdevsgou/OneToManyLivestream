@@ -198,6 +198,25 @@ MIT License
 
 ---
 
-## ✍️ Author
+## ✍️ File Struct
 
-Built by [Your Name] — feel free to contribute or reach out!
+stream-app/
+├── client/                     # React frontend
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── HostStream.js   # Host camera + send stream
+│   │   │   ├── ViewerPlayer.js # Play .m3u8 + chat
+│   │   │   └── ChatBox.js
+│   │   └── App.js
+│   └── public/
+│       └── index.html
+│
+├── server/                     # Backend
+│   ├── stream-server.js        # WebSocket for video chunks
+│   ├── chat-server.js          # WebSocket for chat per stream
+│   └── public/hls/             # FFmpeg output HLS folder
+│
+├── nginx.conf                  # RTMP+HLS setup
+├── package.json
+└── README.md
+
