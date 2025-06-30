@@ -1,222 +1,117 @@
+# 📡 Stream App (React + WebSocket + FFmpeg + HLS)
 
-# 🎥 One-to-Many WebRTC Video Conference (Self-Hosted)
-
-A fully self-hosted one-to-many video conferencing web app using **WebRTC**, **Socket.IO**, and **Node.js** with no reliance on third-party services like Twilio, Agora, or Firebase.
-
----
-
-## ✅ Features
-
-- 🎤 **One Host → Multiple Viewers**
-- 🔒 **No external services**
-- 🖥️ **Runs in browser (Web App)**
-- 🔁 **Realtime via WebRTC**
-- 📡 **Custom signaling server with Socket.IO**
-- 🌐 **Self-hosted TURN/STUN support via coturn**
+A fully custom, self-hosted live streaming solution with React frontend and Node.js backend, using FFmpeg and HLS (no external services). Supports live camera streaming, multi-quality playback, and per-stream live chat.
 
 ---
 
-## 🧱 Architecture Overview
-
-```plaintext
-[Host Camera+Mic]
-       |
-       | <-- WebRTC Media Stream -->
-       |
-[Signaling Server (Node.js + WebSocket)]
-       |
-       | <-- Signaling Messages -->
-       |
-[Multiple Viewers]
-```
-
----
-
-## 📦 Tech Stack
-
-| Purpose            | Tech              |
-|--------------------|-------------------|
-| Signaling Server   | Node.js + Socket.IO |
-| Media Transport    | WebRTC             |
-| TURN/STUN Server   | coturn (self-hosted) |
-| Frontend           | HTML + JS (or React) |
-| Optional Backend   | Express (for serving HTML) |
-
----
-
-## 🚀 Getting Started
-
-### 1. Clone the Repo
-
-```bash
-git clone https://github.com/yourusername/webrtc-one-to-many.git
-cd webrtc-one-to-many
-```
-
-### 2. Install Dependencies
-
-```bash
-npm install
-```
-
----
-
-## 🧠 How It Works
-
-### Host:
-- Captures camera & microphone.
-- Joins a “room” via signaling server.
-- Sends media to each connected viewer using WebRTC peer connections.
-
-### Viewer:
-- Connects to the host via Socket.IO.
-- Receives an offer → sends back an answer.
-- Receives host's media via peer connection.
-
----
-
-## 🔧 coturn Setup (Self-Hosted TURN/STUN)
-
-To ensure connectivity across NAT/firewalls:
-
-### Install coturn
-
-```bash
-sudo apt update
-sudo apt install coturn
-```
-
-### Configure
-
-Edit `/etc/turnserver.conf`:
-
-```ini
-listening-port=3478
-fingerprint
-lt-cred-mech
-realm=yourdomain.com
-user=webrtcuser:password
-```
-
-### Start coturn
-
-```bash
-sudo turnserver -v
-```
-
-Make sure port 3478 is open in your firewall.
-
----
-
-## 💻 Running the App
-
-### 1. Start the Signaling Server
-
-```bash
-node server.js
-```
-
-The server will listen on `http://localhost:3000`.
-
-### 2. Serve HTML File
-
-You can use any static file server (e.g., `serve`, `http-server`, or Express):
-
-```bash
-npx serve .
-```
-
-Or add to `server.js`:
-```js
-app.use(express.static(__dirname));
-```
-
-Then access `http://localhost:3000/index.html` in browser.
-
----
-
-## 📁 File Structure
+## 📁 Project Structure
 
 ```
-.
-├── server.js             # Signaling server (Node.js + Socket.IO)
-├── index.html            # Frontend for host & viewers
-├── README.md             # You're here!
-```
-
----
-
-## 🌐 TURN/STUN Config in WebRTC
-
-Replace this block in `index.html`:
-
-```js
-iceServers: [
-  { urls: "stun:yourdomain.com" },
-  {
-    urls: "turn:yourdomain.com",
-    username: "webrtcuser",
-    credential: "password"
-  }
-]
-```
-
----
-
-## ✅ TODO / Future Enhancements
-
-- [ ] Add Viewer UI to view host stream.
-- [ ] Add chat feature via Socket.IO.
-- [ ] Implement authentication or room codes.
-- [ ] Add screen sharing support.
-- [ ] Use React or Vue for a richer UI.
-- [ ] Use `MediaSoup` or `Janus` for improved scalability.
-
----
-
-## 🛡️ Notes
-
-- WebRTC requires **HTTPS** in production.
-- Make sure coturn and signaling ports are exposed if deploying on cloud.
-- If behind NAT, a TURN server is **required** for peer connections.
-
----
-
-## 🧪 Testing
-
-Open two tabs:
-- One as **Host** (initiates stream).
-- Others as **Viewers** (receive stream).
-
-Use browser console to debug connection and ICE candidate issues.
-
----
-
-## 📜 License
-
-MIT License
-
----
-
-## ✍️ File Struct
-
 stream-app/
 ├── client/                     # React frontend
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── HostStream.js   # Host camera + send stream
-│   │   │   ├── ViewerPlayer.js # Play .m3u8 + chat
-│   │   │   └── ChatBox.js
-│   │   └── App.js
+│   │   │   ├── HostStream.js   # Host camera + send stream via WebSocket
+│   │   │   ├── ViewerPlayer.js # Video player with HLS and chat integration
+│   │   │   └── ChatBox.js      # Per-stream chat UI using WebSocket
+│   │   └── App.js              # Routes between Host/Viewer
 │   └── public/
-│       └── index.html
+│       └── index.html          # React mount point
 │
 ├── server/                     # Backend
-│   ├── stream-server.js        # WebSocket for video chunks
-│   ├── chat-server.js          # WebSocket for chat per stream
-│   └── public/hls/             # FFmpeg output HLS folder
+│   ├── stream-server.js        # WebSocket server to pipe MediaRecorder -> FFmpeg
+│   ├── chat-server.js          # WebSocket chat server with per-stream rooms
+│   └── public/hls/             # HLS output (.m3u8 + .ts files generated by FFmpeg)
 │
-├── nginx.conf                  # RTMP+HLS setup
-├── package.json
-└── README.md
+├── nginx.conf                  # RTMP + HLS server configuration (optional for advanced setups)
+├── package.json                # Dependencies for backend services
+└── README.md                   # Project instructions
+```
 
+---
+
+## 🚀 Features
+
+* 🎥 Host live stream from camera using browser (MediaRecorder + WebSocket)
+* 🖥️ Viewer page with adaptive HLS playback (`hls.js`)
+* 💬 Live chat per stream using WebSocket
+* 🔁 Multi-quality video (480p, 720p, 1080p) via FFmpeg
+* 🔐 Stream-based routing by ID (e.g. `/watch/stream123`)
+
+---
+
+## 🛠️ Technologies Used
+
+* **Frontend**: React, hls.js, WebSocket
+* **Backend**: Node.js, FFmpeg, Express (for static files)
+* **Streaming**: HLS (`.m3u8` via FFmpeg), optional RTMP server via Nginx
+
+---
+
+## 🧪 Development Workflow
+
+1. Run the WebSocket + FFmpeg server:
+
+   ```bash
+   node server/stream-server.js
+   node server/chat-server.js
+   ```
+
+2. Start React frontend:
+
+   ```bash
+   cd client && npm install && npm start
+   ```
+
+3. Visit:
+
+   * `http://localhost:3000/host` – Host camera stream
+   * `http://localhost:3000/watch/stream123` – Viewer with chat
+
+---
+
+## 📦 FFmpeg Sample (for multiple quality outputs)
+
+Use `ffmpeg` with `-var_stream_map` and `-master_pl_name` to generate HLS:
+
+```bash
+ffmpeg -re -i pipe:0 \
+  -map 0:v -map 0:a -s:v:0 640x360 -b:v:0 800k \
+  -map 0:v -map 0:a -s:v:1 1280x720 -b:v:1 2500k \
+  -c:v libx264 -c:a aac \
+  -f hls -hls_time 4 -hls_list_size 6 \
+  -hls_segment_filename "server/public/hls/v%v/segment%d.ts" \
+  -master_pl_name master.m3u8 \
+  -var_stream_map "v:0,a:0 v:1,a:1" \
+  server/public/hls/v%v/stream.m3u8
+```
+
+---
+
+## 📺 Playback Example
+
+Use `hls.js` in the viewer component to load the stream:
+
+```js
+hls.loadSource('http://localhost:3001/hls/master.m3u8');
+hls.attachMedia(videoRef);
+```
+
+---
+
+## ✅ To-Do / Improvements
+
+* [ ] Add auth/token protection per stream
+* [ ] Add recording option
+* [ ] Add moderator/admin UI for chat
+* [ ] Add viewer count per stream
+
+---
+
+## 📬 Questions?
+
+Open an issue or message the maintainer.
+
+---
+
+MIT License © 2025
